@@ -2,30 +2,44 @@
 
 /*
 |--------------------------------------------------------------------------
-| Routes File
+| Application Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you will register all of the routes in an application.
+| Here is where you can register all of the routes for an application.
 | It's a breeze. Simply tell Laravel the URIs it should respond to
 | and give it the controller to call when that URI is requested.
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'ArticleController@index');
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| This route group applies the "web" middleware group to every route
-| it contains. The "web" middleware group is defined in your HTTP
-| kernel and includes session state, CSRF protection, and more.
-|
-*/
 
-Route::group(['middleware' => ['web']], function () {
-    //
+Route::resource('article', 'ArticleController');
+Route::resource('comment', 'CommentController');
+Route::resource('category', 'CategoryController');
+Route::resource('about', 'AboutController');
+
+
+Route::controllers([
+    'backend/auth' => 'backend\AuthController',
+    'backend/password' => 'backend\PasswordController',
+    'search'=>'SearchController',
+]);
+
+Route::group(['prefix'=>'backend','middleware'=>'auth'],function(){
+    Route::any('/','backend\HomeController@index');
+    Route::resource('home', 'backend\HomeController');
+    Route::resource('cate','backend\CateController');
+    Route::resource('content','backend\ContentController');
+    Route::resource('article','backend\ArticleController');
+    Route::resource('tags','backend\TagsController');
+    Route::resource('user','backend\UserController');
+    Route::resource('comment','backend\CommentController');
+    Route::resource('nav','backend\NavigationController');
+    Route::resource('links','backend\LinksController');
+    Route::controllers([
+        'system'=>'backend\SystemController',
+        'upload'=>'backend\UploadFileController'
+    ]);
+
 });

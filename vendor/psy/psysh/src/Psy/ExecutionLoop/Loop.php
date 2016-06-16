@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell.
+ * This file is part of Psy Shell
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2014 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,9 +12,9 @@
 namespace Psy\ExecutionLoop;
 
 use Psy\Configuration;
+use Psy\Shell;
 use Psy\Exception\BreakException;
 use Psy\Exception\ThrowUpException;
-use Psy\Shell;
 
 /**
  * The Psy Shell execution loop.
@@ -153,7 +153,7 @@ class Loop
     /**
      * Decide whether to bind the execution loop.
      *
-     * @return bool
+     * @return boolean
      */
     protected static function bindLoop()
     {

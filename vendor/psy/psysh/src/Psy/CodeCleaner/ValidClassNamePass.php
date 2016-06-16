@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell.
+ * This file is part of Psy Shell
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2014 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,6 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_ as NewExpr;
-use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_ as ClassStmt;
 use PhpParser\Node\Stmt\Interface_ as InterfaceStmt;
@@ -64,8 +63,6 @@ class ValidClassNamePass extends NamespaceAwarePass
             $this->validateNewExpression($node);
         } elseif ($node instanceof ClassConstFetch) {
             $this->validateClassConstFetchExpression($node);
-        } elseif ($node instanceof StaticCall) {
-            $this->validateStaticCallExpression($node);
         }
     }
 
@@ -111,8 +108,8 @@ class ValidClassNamePass extends NamespaceAwarePass
      */
     protected function validateNewExpression(NewExpr $stmt)
     {
-        // if class name is an expression or an anonymous class, give it a pass for now
-        if (!$stmt->class instanceof Expr && !$stmt->class instanceof ClassStmt) {
+        // if class name is an expression, give it a pass for now
+        if (!$stmt->class instanceof Expr) {
             $this->ensureClassExists($this->getFullyQualifiedName($stmt->class), $stmt);
         }
     }
@@ -124,28 +121,9 @@ class ValidClassNamePass extends NamespaceAwarePass
      */
     protected function validateClassConstFetchExpression(ClassConstFetch $stmt)
     {
-        // there is no need to check exists for ::class const for php 5.5 or newer
-        if (strtolower($stmt->name) === 'class'
-            && version_compare(PHP_VERSION, '5.5', '>=')) {
-            return;
-        }
-
         // if class name is an expression, give it a pass for now
         if (!$stmt->class instanceof Expr) {
-            $this->ensureClassOrInterfaceExists($this->getFullyQualifiedName($stmt->class), $stmt);
-        }
-    }
-
-    /**
-     * Validate a class constant fetch expression's class.
-     *
-     * @param StaticCall $stmt
-     */
-    protected function validateStaticCallExpression(StaticCall $stmt)
-    {
-        // if class name is an expression, give it a pass for now
-        if (!$stmt->class instanceof Expr) {
-            $this->ensureMethodExists($this->getFullyQualifiedName($stmt->class), $stmt->name, $stmt);
+            $this->ensureClassExists($this->getFullyQualifiedName($stmt->class), $stmt);
         }
     }
 
@@ -195,44 +173,6 @@ class ValidClassNamePass extends NamespaceAwarePass
     }
 
     /**
-     * Ensure that a referenced class _or interface_ exists.
-     *
-     * @throws FatalErrorException
-     *
-     * @param string $name
-     * @param Stmt   $stmt
-     */
-    protected function ensureClassOrInterfaceExists($name, $stmt)
-    {
-        if (!$this->classExists($name) && !$this->interfaceExists($name)) {
-            throw $this->createError(sprintf('Class \'%s\' not found', $name), $stmt);
-        }
-    }
-
-    /**
-     * Ensure that a statically called method exists.
-     *
-     * @throws FatalErrorException
-     *
-     * @param string $class
-     * @param string $name
-     * @param Stmt   $stmt
-     */
-    protected function ensureMethodExists($class, $name, $stmt)
-    {
-        $this->ensureClassExists($class, $stmt);
-
-        // if method name is an expression, give it a pass for now
-        if ($name instanceof Expr) {
-            return;
-        }
-
-        if (!method_exists($class, $name) && !method_exists($class, '__callStatic')) {
-            throw $this->createError(sprintf('Call to undefined method %s::%s()', $class, $name), $stmt);
-        }
-    }
-
-    /**
      * Ensure that a referenced interface exists.
      *
      * @throws FatalErrorException
@@ -272,21 +212,12 @@ class ValidClassNamePass extends NamespaceAwarePass
     /**
      * Check whether a class exists, or has been defined in the current code snippet.
      *
-     * Gives `self`, `static` and `parent` a free pass.
-     *
      * @param string $name
      *
-     * @return bool
+     * @return boolean
      */
     protected function classExists($name)
     {
-        // Give `self`, `static` and `parent` a pass. This will actually let
-        // some errors through, since we're not checking whether the keyword is
-        // being used in a class scope.
-        if (in_array(strtolower($name), array('self', 'static', 'parent'))) {
-            return true;
-        }
-
         return class_exists($name) || $this->findInScope($name) === self::CLASS_TYPE;
     }
 
@@ -295,7 +226,7 @@ class ValidClassNamePass extends NamespaceAwarePass
      *
      * @param string $name
      *
-     * @return bool
+     * @return boolean
      */
     protected function interfaceExists($name)
     {
@@ -307,7 +238,7 @@ class ValidClassNamePass extends NamespaceAwarePass
      *
      * @param string $name
      *
-     * @return bool
+     * @return boolean
      */
     protected function traitExists($name)
     {

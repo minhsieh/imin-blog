@@ -11,35 +11,74 @@
 |
 */
 
-Route::get('/', 'ArticleController@index');
+/**
+ * admin.
+ */
+Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'auth'], function () {
+    Route::get('index', 'AdminController@index');
 
+    Route::get('articles/index', 'ArticlesController@index');
+    Route::get('articles/trash', 'ArticlesController@trash');
+    Route::post('articles/restore/{id}', 'ArticlesController@restore');
+    Route::delete('articles/forceDelete/{id}', 'ArticlesController@forceDelete');
+    Route::resource('articles', 'ArticlesController');
 
-Route::resource('article', 'ArticleController');
-Route::resource('comment', 'CommentController');
-Route::resource('category', 'CategoryController');
-Route::resource('about', 'AboutController');
+    Route::get('categories/index', 'CategoriesController@index');
+    Route::resource('categories', 'CategoriesController');
 
+    Route::get('tags/index', 'TagsController@index');
+    Route::resource('tags', 'TagsController');
 
-Route::controllers([
-    'backend/auth' => 'backend\AuthController',
-    'backend/password' => 'backend\PasswordController',
-    'search'=>'SearchController',
+    Route::get('settings/index', 'SettingsController@index');
+    Route::patch('settings/index', 'SettingsController@update');
+
+    Route::post('uploadImage', 'ArticlesController@uploadImage');
+
+    Route::get('setting/flush', function () {
+        \Cache::flush();
+
+        return 'cache flush ok';
+    });
+});
+
+/*
+ * auth
+ */
+Route::get('login', 'Admin\AuthController@getLogin');
+Route::post('login', 'Admin\AuthController@postLogin');
+Route::get('logout', 'Admin\AuthController@logout');
+
+/*Route::controllers([
+    'auth' => 'Auth\AuthController',
+    'password' => 'Auth\PasswordController',
 ]);
+*/
 
-Route::group(['prefix'=>'backend','middleware'=>'auth'],function(){
-    Route::any('/','backend\HomeController@index');
-    Route::resource('home', 'backend\HomeController');
-    Route::resource('cate','backend\CateController');
-    Route::resource('content','backend\ContentController');
-    Route::resource('article','backend\ArticleController');
-    Route::resource('tags','backend\TagsController');
-    Route::resource('user','backend\UserController');
-    Route::resource('comment','backend\CommentController');
-    Route::resource('nav','backend\NavigationController');
-    Route::resource('links','backend\LinksController');
-    Route::controllers([
-        'system'=>'backend\SystemController',
-        'upload'=>'backend\UploadFileController'
-    ]);
+Route::get('foo', function () {
+    \Cache::flush();
 
+    return 'ok';
+});
+
+Route::get('bar', function () {
+
+    return view('aaa');
+
+});
+
+/*
+ * home
+ */
+Route::group(['namespace' => 'Home'], function () {
+
+    Route::resource('/', 'HomeController@index');
+
+    Route::get('tags', 'TagsController@index');
+    Route::get('tags/{slug}', 'TagsController@show');
+
+    Route::get('categories', 'CategoriesController@index');
+    Route::get('categories/{slug}', 'CategoriesController@show');
+
+    Route::get('articles', 'ArticlesController@index');
+    Route::get('{slug}', 'ArticlesController@show');
 });
